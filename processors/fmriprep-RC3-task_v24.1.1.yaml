@@ -75,7 +75,6 @@ command:
   container: fmriprep
   args: >-
     --notrack
-    --participant_label {subject}
     --output-spaces MNI152NLin6Asym
     --slice-time-ref 0
     --fs-license-file /opt/license.txt
@@ -91,7 +90,7 @@ post:
   args: >-
     bash -c '
     mkdir /OUTPUTS/HTML &&
-    cp /OUTPUTS/BIDS/sub-{subject}.html /OUTPUTS/HTML &&
-    mkdir /OUTPUTS/HTML/sub-{subject} &&
-    cp -R /OUTPUTS/BIDS/sub-{subject}/figures /OUTPUTS/HTML/sub-{subject}
+    cp /OUTPUTS/BIDS/sub-*.html /OUTPUTS/HTML &&
+    mkdir /OUTPUTS/HTML/sub-* &&
+    cp -R /OUTPUTS/BIDS/sub-*/figures /OUTPUTS/HTML/sub-*
     '
