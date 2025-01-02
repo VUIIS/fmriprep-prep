@@ -139,7 +139,7 @@ if args.slicetiming:
             jobj['SliceTiming'][0::2] = basetimes[0:math.ceil(nslices/2)]
             jobj['SliceTiming'][1::2] = basetimes[math.ceil(nslices/2):]
 
-    elif args.slicetiming in ['GE_interleaved_k']:
+    elif args.slicetiming in ['GE_interleaved_k', 'Philips_DEFAULT_k']:
         basetimes = [x / nslices * tr for x in range(0,nslices)]
         jobj['SliceEncodingDirection'] = 'k'
         jobj['SliceTiming'] = [0 for x in basetimes]
