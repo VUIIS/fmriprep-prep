@@ -16,7 +16,7 @@ inputs:
   xnat:
     filters:
       - type: match
-        inputs: scan_fmri,assr_fs/scan_fmri
+        inputs: scan_t1,assr_fs/scan_t1
 
     scans:
       - name: scan_t1
