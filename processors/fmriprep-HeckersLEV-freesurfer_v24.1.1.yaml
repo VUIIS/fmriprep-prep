@@ -20,14 +20,14 @@ inputs:
 
     scans:
       - name: scan_t1
-        types: t1_improved3d
+        types: T1W/3D/TFE
         keep_multis: first
         skip_unusable: true
         resources:
           - {resource: NIFTI, fmatch: '*.nii.gz', fdest: t1.nii.gz}
           - {resource: JSON, fmatch: '*.json', fdest: t1.json}
       - name: scan_fmri
-        types: RS_fMRI
+        types: 'Resting state'
         resources:
           - {resource: JSON, fmatch: '*.json', fdest: fmri.json}
 
