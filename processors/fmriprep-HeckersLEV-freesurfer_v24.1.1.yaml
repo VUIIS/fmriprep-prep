@@ -33,7 +33,7 @@ inputs:
 
     assessors:
         - name: assr_fs
-          proctypes: freesurfer741_v2
+          proctypes: freesurfer720_v2
           resources:
             - {resource: SUBJECT, ftype: DIR, fdest: SUBJECT}
 
