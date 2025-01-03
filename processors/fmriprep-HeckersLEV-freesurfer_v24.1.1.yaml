@@ -16,7 +16,7 @@ inputs:
   xnat:
     filters:
       - type: match
-        inputs: scan_fmri,assr_synbold/scan_fmri
+        inputs: scan_fmri,assr_fs/scan_fmri
 
     scans:
       - name: scan_t1
@@ -50,6 +50,8 @@ pre:
   container: fmriprep
   args: >-
     bash -c '
+    mkdir /INPUTS/freesurfer &&
+    mv /INPUTS/SUBJECT/SUBJECT /INPUTS/freesurfer/sub-{subject} &&
     cd /INPUTS &&
     curl -o v1.5.0.tar.gz -L https://github.com/baxpr/fmriprep-prep/archive/refs/tags/v1.5.0.tar.gz &&
     tar -zxf v1.5.0.tar.gz &&
