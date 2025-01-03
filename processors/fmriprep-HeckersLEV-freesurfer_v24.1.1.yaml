@@ -20,7 +20,7 @@ inputs:
 
     scans:
       - name: scan_t1
-        types: T1W/3D/TFE
+        types: 'Original PGPP_1mm'
         keep_multis: first
         skip_unusable: true
         resources:
