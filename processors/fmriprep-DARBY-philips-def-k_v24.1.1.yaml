@@ -71,6 +71,7 @@ command:
   type: singularity_run
   container: fmriprep
   args: >-
+    --work-dir /tmp
     --notrack
     --output-spaces MNI152NLin2009cAsym
     --ignore slicetiming
