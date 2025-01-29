@@ -1,6 +1,5 @@
 # THIS IS STILL BEING TESTED!!!!!!!!!!!!!!!!!!
 # DON'T USE THIS YET!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 ---
 procyamlversion: 3.0.0-dev.0
 
@@ -88,7 +87,5 @@ post:
     bash -c '
     mkdir /OUTPUTS/HTML &&
     cp /OUTPUTS/BIDS/sub-*.html /OUTPUTS/HTML &&
-    mkdir /OUTPUTS/HTML/sub-* &&
-    cp -R /OUTPUTS/BIDS/sub-*/figures /OUTPUTS/HTML/sub-* &&
-    mv /OUTPUTS/BIDS/sourcedata /OUTPUTS/sourcedata
+    cp -R /OUTPUTS/BIDS/sub-*/figures /OUTPUTS/HTML/sub-* 
     '
