@@ -45,7 +45,6 @@ inputs:
       - {varname: session, object: session, attr: label}
 
 outputs:
-  - {path: sourcedata, type: DIR, resource: sourcedata}
   - {path: HTML, type: DIR, resource: HTML}
   - {path: BIDS, type: DIR, resource: fmriprepBIDS}
 
