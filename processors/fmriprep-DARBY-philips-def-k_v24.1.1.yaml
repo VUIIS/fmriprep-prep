@@ -73,7 +73,6 @@ command:
     --work-dir /tmp
     --notrack
     --output-spaces MNI152NLin2009cAsym
-    --ignore slicetiming
     --fs-license-file /opt/license.txt
     --fs-subjects-dir /INPUTS/freesurfer
     /INPUTS/BIDS
