@@ -68,7 +68,8 @@ pre:
       --bids_dir /INPUTS/BIDS
       --sub {subject}
       --ses {session}
-      --fmri_niigzs /INPUTS/fmri.nii.gz 
+      --fmri_niigzs /INPUTS/fmri.nii.gz
+      --freesurfer_dir /INPUTS/freesurfer/sub-{subject}
 command:
   type: singularity_run
   container: fmriprep
