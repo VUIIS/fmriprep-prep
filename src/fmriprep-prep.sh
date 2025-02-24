@@ -9,6 +9,7 @@ export rpefwd_niigz=""
 export rperev_niigz=""
 export slicetiming=""
 export bids_dir=/INPUTS/BIDS
+export freesurfer_dir=
 export sub=01
 export ses=01
 export task=
@@ -24,6 +25,7 @@ while [[ $# -gt 0 ]]; do
         --rpefwd_niigz)   export rpefwd_niigz="$2";   shift; shift ;;
         --rperev_niigz)   export rperev_niigz="$2";   shift; shift ;;
         --bids_dir)       export bids_dir="$2";       shift; shift ;;
+        --freesurfer_dir) export freesurfer_dir="$2"; shift; shift ;;
         --sub)            export sub="$2";            shift; shift ;;
         --ses)            export ses="$2";            shift; shift ;;
         --slicetiming)    export slicetiming="$2";    shift; shift ;;
@@ -66,6 +68,13 @@ sub=${sub//-/}
 sub=${sub//_/}
 ses=${ses//-/}
 ses=${ses//_/}
+
+# If freesurfer_dir is specified, rename it by the sanitized subject name
+if [[ -n "${freesurfer_dir}" ]]; then
+    new_fsdir="$(dirname ${freesurfer_dir})/sub-${sub}"
+    echo "Renaming ${freesurfer_dir} to ${new_fsdir}"
+    mv "${freesurfer_dir}" "${new_fsdir}"
+fi
 
 # Rename and relocate files according to bids func/fmap scheme
 # https://bids-specification.readthedocs.io/en/stable/modality-specific-files/magnetic-resonance-imaging-data.html
