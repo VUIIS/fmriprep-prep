@@ -73,6 +73,7 @@ command:
     --skip_bids_validation
     --output-spaces MNI152NLin2009cAsym
     --fs-license-file /opt/license.txt
+    --fs-subjects-dir /INPUTS/freesurfer
     /INPUTS/BIDS
     /OUTPUTS/BIDS
     participant
