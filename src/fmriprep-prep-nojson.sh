@@ -10,6 +10,7 @@ export rperev_niigz=""
 export slicetiming=""
 export fmritask=fmritask
 export bids_dir=/INPUTS/BIDS
+export freesurfer_dir=
 export sub=01
 export ses=01
 
@@ -29,6 +30,7 @@ while [[ $# -gt 0 ]]; do
         --ses)            export ses="$2";            shift; shift ;;
         --slicetiming)    export slicetiming="$2";    shift; shift ;;
         --fmritask)       export fmritask="$2";       shift; shift ;;
+        --freesurfer_dir) export freesurfer_dir="$2"; shift; shift ;;
     --fmri_niigzs)
             next="$2"
             while ! [[ "$next" =~ -.* ]] && [[ $# > 1 ]]; do
@@ -59,7 +61,16 @@ fi
 # If subject, session have _, drop it because it's not compatible with BIDS
 # file naming
 sub=${sub//_/}
+sub=${sub//-/}
 ses=${ses//_/}
+ses=${ses//-/}
+
+# If freesurfer_dir is specified, rename it by the sanitized subject name
+if [[ -n "${freesurfer_dir}" ]]; then
+    new_fsdir="$(dirname ${freesurfer_dir})/sub-${sub}"
+    echo "Renaming ${freesurfer_dir} to ${new_fsdir}"
+    mv "${freesurfer_dir}" "${new_fsdir}"
+fi
 
 # Rename and relocate files according to bids scheme
 
