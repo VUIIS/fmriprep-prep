@@ -1,0 +1,98 @@
+---
+procyamlversion: 3.0.0-dev.0
+description: fmriprep - https://fmriprep.org/en/stable/
+jobtemplate: job_template_v3.txt
+containers:
+  - name: fmriprep
+    path: fmriprep_24.1.1.sif
+    source: docker://nipreps/fmriprep:24.1.1
+requirements:
+  walltime: 4-0
+  memory: 64000
+inputs:
+  xnat:
+    filters:
+      - type: match
+        inputs: scan_t1,assr_fs/scan_t1
+    scans:
+      - name: scan_t1
+        types: 'Improved 3D'
+        keep_multis: first
+        resources:
+          - {resource: NIFTI, fmatch: '*.nii.gz', fdest: t1.nii.gz}
+      - name: scan_fmri
+        types: SteadyR_fMRI
+        resources:
+          - {resource: NIFTI, fmatch: '*.nii.gz', fdest: fmri.nii.gz}
+    assessors:
+        - name: assr_fs
+          proctypes: freesurfer741_v2
+          resources:
+            - {resource: SUBJECT, ftype: DIR, fdest: SUBJECT}
+    attrs:
+      - {varname: subject, object: session, attr: subject_label}
+      - {varname: session, object: session, attr: label}
+# To save space, we won't store freesurfer outputs, which would be here as
+#     - {path: sourcedata, type: DIR, resource: sourcedata}
+outputs:
+  - {path: HTML, type: DIR, resource: HTML}
+  - {path: BIDS, type: DIR, resource: fmriprepBIDS}
+# Pre container may adjust subject/session labels to remove underscore, which is
+# not compatible with BIDS filenames. Thus {subject}, {session} dax vars are not
+# available after the pre section.
+pre:
+  type: singularity_exec
+  container: fmriprep
+  args: >-
+    bash -c '
+    mkdir /INPUTS/freesurfer &&
+    mv /INPUTS/SUBJECT/SUBJECT /INPUTS/freesurfer/sub-{subject} &&
+    cd /INPUTS &&
+    curl -o v1.6.1.tar.gz -L https://github.com/baxpr/fmriprep-prep/archive/refs/tags/v1.6.1.tar.gz &&
+    tar -zxf v1.6.1.tar.gz &&
+    export PATH=/INPUTS/fmriprep-prep-1.6.1/src:\$PATH &&
+    fmriprep-prep-nojson.sh
+      --t1_niigz /INPUTS/t1.nii.gz
+      --bids_dir /INPUTS/BIDS
+      --sub {subject}
+      --ses {session}
+      --fmri_niigzs /INPUTS/fmri.nii.gz
+      --fmritask rest
+      --slicetiming none
+      --freesurfer_dir /INPUTS/freesurfer/sub-{subject}
+    '
+
+# Specify --work-dir /tmp explicitly to avoid a problem with long pathnames in fmriprep
+# (https://neurostars.org/t/midthickness0-node-crash-during-fmriprep-23-1-4/26592/14)
+# Participant label is not explicitly specified (see above concerning {subject})
+command:
+  type: singularity_run
+  container: fmriprep
+  args: >-
+    --notrack
+    --work-dir /tmp
+    --ignore slicetiming
+    --skip_bids_validation
+    --output-spaces MNI152NLin2009cAsym
+    --fs-license-file /opt/license.txt
+    --fs-subjects-dir /INPUTS/freesurfer
+    /INPUTS/BIDS
+    /OUTPUTS/BIDS
+    participant
+  extraopts: --bind /data/mcr/centos7/FS6/license.txt:/opt/license.txt
+# Here we do some extra gymnastics to copy the full HTML output to HTML resource
+# without knowing the dirnames (due to changed subject label). Also, delete the 
+# fsaverage because it just takes up space.
+post:
+  type: singularity_exec
+  container: fmriprep
+  args: >-
+    bash -c '
+    mkdir /OUTPUTS/HTML &&
+    cp /OUTPUTS/BIDS/sub-*.html /OUTPUTS/HTML &&
+    cp -R /OUTPUTS/BIDS/sub-* /OUTPUTS/HTML &&
+    rm -fr /OUTPUTS/HTML/sub-*/ses-* &&
+    rm -fr /OUTPUTS/HTML/sub-*/log &&
+    mv /OUTPUTS/BIDS/sourcedata /OUTPUTS/sourcedata &&
+    rm -fr /OUTPUTS/sourcedata/freesurfer/fsaverage
+    '
