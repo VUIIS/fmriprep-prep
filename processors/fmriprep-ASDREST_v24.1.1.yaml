@@ -17,19 +17,32 @@ requirements:
 inputs:
   xnat:
 
+    filters:
+      - type: match
+        inputs: scan_t1,assr_fs/scan_t1
+
     scans:
-        
+
       - name: scan_t1
-        types: T1
+        types: Improved 3D,T1*
         keep_multis: first
+        skip_unusable: true
         resources:
           - {resource: NIFTI, fmatch: '*.nii.gz', fdest: t1.nii.gz}
 
       - name: scan_fmri
-        types: REST
+        types: Funct-Resting,Rest*
+        skip_unusable: true
         resources:
           - {resource: NIFTI, fmatch: '*.nii.gz', fdest: fmri.nii.gz}
           - {resource: JSON, fmatch: '*.json', fdest: fmri.json}
+
+    assessors:
+        
+        - name: assr_fs
+          proctypes: freesurfer741_v2
+          resources:
+            - {resource: SUBJECT, ftype: DIR, fdest: SUBJECT}
 
     attrs:
       - {varname: subject, object: session, attr: subject_label}
@@ -49,6 +62,8 @@ pre:
   container: fmriprep
   args: >-
     bash -c '
+    mkdir /INPUTS/freesurfer &&
+    mv /INPUTS/SUBJECT/SUBJECT /INPUTS/freesurfer/sub-{subject} &&
     cd /INPUTS &&
     curl -o v1.6.1.tar.gz -L https://github.com/baxpr/fmriprep-prep/archive/refs/tags/v1.6.1.tar.gz &&
     tar -zxf v1.6.1.tar.gz &&
@@ -60,7 +75,7 @@ pre:
       --ses {session}
       --fmri_niigzs /INPUTS/fmri.nii.gz
       --fmritask rest
-      --slicetiming ABIDE
+      --slicetiming Philips_ASCEND_k
     '
 
 # Specify --work-dir /tmp explicitly to avoid a problem with long pathnames in fmriprep
@@ -72,10 +87,10 @@ command:
   args: >-
     --notrack
     --work-dir /tmp
-    --bold2t1w-dof 12
     --slice-time-ref middle
     --output-spaces MNI152NLin2009cAsym
     --fs-license-file /opt/license.txt
+    --fs-subjects-dir /INPUTS/freesurfer
     /INPUTS/BIDS
     /OUTPUTS/BIDS
     participant
