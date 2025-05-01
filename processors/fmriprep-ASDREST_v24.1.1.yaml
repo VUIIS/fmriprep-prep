@@ -24,14 +24,14 @@ inputs:
     scans:
 
       - name: scan_t1
-        types: Improved 3D,T1*
+        types: T1*
         keep_multis: first
         skip_unusable: true
         resources:
           - {resource: NIFTI, fmatch: '*.nii.gz', fdest: t1.nii.gz}
 
       - name: scan_fmri
-        types: Funct-Resting,Rest*
+        types: Rest*
         skip_unusable: true
         resources:
           - {resource: NIFTI, fmatch: '*.nii.gz', fdest: fmri.nii.gz}
