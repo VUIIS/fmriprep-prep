@@ -23,12 +23,12 @@ inputs:
           - {resource: NIFTI, fmatch: '*.nii.gz', fdest: t1.nii.gz}
           - {resource: JSON, fmatch: '*.json', fdest: t1.json}
       - name: scan_fmri
-        types: ERT_1
+        types: ERT_1,ERT_2
         resources:
           - {resource: NIFTI, fmatch: '*.nii.gz', fdest: fmri.nii.gz}
           - {resource: JSON, fmatch: '*.json', fdest: fmri.json}
       - name: scan_fmrirpe
-        types: ERT_2
+        types: TopUp_GE_APP
         keep_multis: first
         resources:
           - {resource: NIFTI, fmatch: '*.nii.gz', fdest: fmrirpe.nii.gz}
