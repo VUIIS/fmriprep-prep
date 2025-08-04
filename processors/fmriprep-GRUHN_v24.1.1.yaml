@@ -77,6 +77,8 @@ command:
     /OUTPUTS/BIDS
     participant
   extraopts: --bind /data/mcr/centos7/FS6/license.txt:/opt/license.txt
+# Here we do some extra gymnastics to copy the full HTML output to HTML resource
+# without knowing the dirnames (due to changed subject label).
 post:
   type: singularity_exec
   container: fmriprep
@@ -84,7 +86,8 @@ post:
     bash -c '
     mkdir /OUTPUTS/HTML &&
     cp /OUTPUTS/BIDS/sub-*.html /OUTPUTS/HTML &&
-    mkdir /OUTPUTS/HTML/sub-* &&
-    cp -R /OUTPUTS/BIDS/sub-*/figures /OUTPUTS/HTML/sub-*
+    cp -R /OUTPUTS/BIDS/sub-* /OUTPUTS/HTML &&
+    rm -fr /OUTPUTS/HTML/sub-*/ses-* &&
+    rm -fr /OUTPUTS/HTML/sub-*/log
     '
     
