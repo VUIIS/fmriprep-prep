@@ -1,0 +1,85 @@
+---
+procyamlversion: 3.0.0-dev.0
+description: fmriprep - https://fmriprep.org/en/stable/
+jobtemplate: job_template_v3.txt
+containers:
+  - name: fmriprep
+    path: fmriprep_25.2.2.sif
+    source: docker://nipreps/fmriprep:25.2.2
+requirements:
+  walltime: "48:00:00"
+  memory: 24G
+inputs:
+  xnat:
+    filters:
+      - type: match
+        inputs: scan_t1,assr_fs/scan_t1
+    scans:
+      - name: scan_t1
+        types: 'WIP RL_MPRAGE0.6mm_CS6'
+        keep_multis: first
+        skip_unusable: true
+        resources:
+          - {resource: NIFTI, fmatch: '*.nii.gz', fdest: t1.nii.gz}
+          - {resource: JSON, fmatch: '*.json', fdest: t1.json}
+      - name: scan_fmri
+        types: RestingState_7min
+        resources:
+          - {resource: NIFTI, fmatch: '*.nii.gz', fdest: fmri.nii.gz}
+          - {resource: JSON, fmatch: '*.json', fdest: fmri.json}
+    assessors:
+        - name: assr_fs
+          proctypes: test-150228-freesurfer810_v1
+          resources:
+            - {resource: SUBJECT, ftype: DIR, fdest: SUBJECT}
+    attrs:
+      - {varname: subject, object: session, attr: subject_label}
+      - {varname: session, object: session, attr: label}
+outputs:
+  - {path: HTML, type: DIR, resource: HTML}
+  - {path: BIDS, type: DIR, resource: fmriprepBIDS}
+pre:
+  type: singularity_exec
+  container: fmriprep
+  args: >-
+    bash -c '
+    mkdir /INPUTS/freesurfer &&
+    mv /INPUTS/SUBJECT/SUBJECT /INPUTS/freesurfer/sub-{subject} &&
+    cd /INPUTS &&
+    curl -o v1.6.1.tar.gz -L https://github.com/baxpr/fmriprep-prep/archive/refs/tags/v1.6.1.tar.gz &&
+    tar -zxf v1.6.1.tar.gz &&
+    export PATH=/INPUTS/fmriprep-prep-1.6.1/src:\$PATH &&
+    fmriprep-prep.sh
+      --t1_niigz /INPUTS/t1.nii.gz
+      --fmri_niigz /INPUTS/fmri.nii.gz
+      --bids_dir /INPUTS/BIDS
+      --sub {subject}
+      --ses {session}
+      --fmri_niigzs /INPUTS/fmri.nii.gz
+    '
+command:
+  type: singularity_run
+  container: fmriprep
+  args: >-
+    --notrack
+    --output-spaces MNI152NLin6Asym
+    --slice-time-ref 0
+    --fs-license-file /opt/license.txt
+    --fs-subjects-dir /INPUTS/freesurfer
+    /INPUTS/BIDS
+    /OUTPUTS/BIDS
+    participant
+  extraopts: --bind /data/mcr/centos7/FS6/license.txt:/opt/license.txt
+# Here we do some extra gymnastics to copy the full HTML output to HTML resource
+# without knowing the dirnames (due to changed subject label).
+post:
+  type: singularity_exec
+  container: fmriprep
+  args: >-
+    bash -c '
+    mkdir /OUTPUTS/HTML &&
+    cp /OUTPUTS/BIDS/sub-*.html /OUTPUTS/HTML &&
+    cp -R /OUTPUTS/BIDS/sub-* /OUTPUTS/HTML &&
+    rm -fr /OUTPUTS/HTML/sub-*/ses-* &&
+    rm -fr /OUTPUTS/HTML/sub-*/log
+    '
