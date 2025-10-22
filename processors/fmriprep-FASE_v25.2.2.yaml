@@ -82,4 +82,6 @@ post:
     cp -R /OUTPUTS/BIDS/sub-* /OUTPUTS/HTML &&
     rm -fr /OUTPUTS/HTML/sub-*/ses-* &&
     rm -fr /OUTPUTS/HTML/sub-*/log
+    mv /OUTPUTS/BIDS/sourcedata /OUTPUTS/sourcedata &&
+    rm -fr /OUTPUTS/sourcedata/freesurfer/fsaverage
     '
