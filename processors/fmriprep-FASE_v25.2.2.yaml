@@ -53,7 +53,7 @@ pre:
       --t1_niigz /INPUTS/t1.nii.gz
       --fmri_niigz /INPUTS/fmri.nii.gz
       --bids_dir /INPUTS/BIDS
-      --freesurfer_dir /INPUTS/freesurfer
+      --freesurfer_dir /INPUTS/freesurfer/sub-{subject}
       --sub {subject}
       --ses {session}
       --fmri_niigzs /INPUTS/fmri.nii.gz
