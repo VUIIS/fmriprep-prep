@@ -57,7 +57,8 @@ inputs:
 
 outputs:
   - {path: HTML, type: DIR, resource: HTML}
-  - {path: BIDS, type: DIR, resource: fmriprepBIDS}
+  - {path: fmriprepBIDS, type: DIR, resource: fmriprepBIDS}
+  - {path: fmriprep-prep-1.6.1/src, type: DIR, resource: SCRIPTS}
 
 pre:
   type: singularity_exec
@@ -66,10 +67,10 @@ pre:
     bash -c '
     mkdir /INPUTS/freesurfer &&
     mv /INPUTS/SUBJECT/SUBJECT /INPUTS/freesurfer/sub-{subject} &&
-    cd /INPUTS &&
+    cd /OUTPUTS &&
     curl -o v1.6.1.tar.gz -L https://github.com/baxpr/fmriprep-prep/archive/refs/tags/v1.6.1.tar.gz &&
     tar -zxf v1.6.1.tar.gz &&
-    export PATH=/INPUTS/fmriprep-prep-1.6.1/src:\$PATH &&
+    export PATH=/OUTPUTS/fmriprep-prep-1.6.1/src:\$PATH &&
     fmriprep-prep.sh
       --t1_niigz /INPUTS/t1.nii.gz
       --rpefwd_niigz /INPUTS/fmri.nii.gz
