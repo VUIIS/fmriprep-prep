@@ -79,7 +79,7 @@ pre:
       --bids_dir /INPUTS/BIDS
       --sub {subject}
       --ses {session}
-      --fs-subjects-dir /INPUTS/freesurfer
+      --freesurfer-dir /INPUTS/freesurfer
       --fmri_niigzs /INPUTS/fmri.nii.gz
       --rpefwd_niigz /INPUTS/fmri.nii.gz
       --rperev_niigz /INPUTS/fmrirpe.nii.gz
