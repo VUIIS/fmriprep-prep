@@ -42,7 +42,40 @@ def slicetimes_Philips_MB3(nslices, trsec):
     return times_by_slice
 
 
+def slicetimes_Philips_MB2_ASCEND(nslices, trsec):
 
+    # Multiband factor (hard coded)
+    F = 2
+
+    # Number of multislice acquisitions
+    M = nslices/F
+    if M != int(M):
+        raise Exception(f'Number of slice times {M} not a multiple of MB factor {F}')
+    M = int(M)
+
+    # List of actual slice acq times in temporal order
+    basetimes = [x * trsec/M for x in list(range(M))]
+
+    # Slice positions (1-based) in same order as basetimes
+    slice1 = list(range(1, M+1, 1))
+    slice2 = [x + M for x in slice1]
+
+    # Build a dict of slice position and acq time
+    d = {
+        **dict(zip(slice1, basetimes)),
+        **dict(zip(slice2, basetimes)),
+        }
+
+    # Sort slice times by slice position - this is our final BIDS-style
+    # list of slice times
+    slices = [k for k in sorted(d.keys())]
+    if not slices==list(range(1, nslices + 1)):
+        raise Exception('Unexpected mismatch in slice numbering')
+    times_by_slice = [d[k] for k in sorted(d.keys())]
+
+    return times_by_slice
+
+    
 ## 
 
 parser = argparse.ArgumentParser()
@@ -117,6 +150,11 @@ if args.slicetiming:
     if args.slicetiming in ['Philips_MB3_k']:
         jobj['SliceEncodingDirection'] = 'k'
         jobj['SliceTiming'] = slicetimes_Philips_MB3(nslices, tr)
+
+    # Special handling for Philips multiband factor 2 ASCEND
+    elif args.slicetiming in ['Philips_MB2_ASCEND_k']:
+        jobj['SliceEncodingDirection'] = 'k'
+        jobj['SliceTiming'] = slicetimes_Philips_MB2_ASCEND(nslices, tr)
 
     elif args.slicetiming in ['Philips_ASCEND_k', 'Siemens_ascending_k']:
         basetimes = [x / nslices * tr for x in range(0,nslices)]
