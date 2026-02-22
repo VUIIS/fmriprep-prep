@@ -1,6 +1,5 @@
 # THIS IS STILL BEING TESTED!!!!!!!!!!!!!!!!!!
 # DON'T USE THIS YET!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 ---
 procyamlversion: 3.0.0-dev.0
 
@@ -46,7 +45,6 @@ inputs:
       - {varname: session, object: session, attr: label}
 
 outputs:
-  - {path: sourcedata, type: DIR, resource: sourcedata}
   - {path: HTML, type: DIR, resource: HTML}
   - {path: BIDS, type: DIR, resource: fmriprepBIDS}
 
@@ -72,15 +70,18 @@ command:
   type: singularity_run
   container: fmriprep
   args: >-
+    --work-dir /tmp
     --notrack
     --output-spaces MNI152NLin2009cAsym
-    --ignore slicetiming
     --fs-license-file /opt/license.txt
+    --fs-subjects-dir /INPUTS/freesurfer
     /INPUTS/BIDS
     /OUTPUTS/BIDS
     participant
   extraopts: --bind /data/mcr/centos7/FS6/license.txt:/opt/license.txt
 
+# Here we do some extra gymnastics to copy the full HTML output to HTML resource
+# without knowing the dirnames (due to changed subject label).
 post:
   type: singularity_exec
   container: fmriprep
@@ -88,7 +89,7 @@ post:
     bash -c '
     mkdir /OUTPUTS/HTML &&
     cp /OUTPUTS/BIDS/sub-*.html /OUTPUTS/HTML &&
-    mkdir /OUTPUTS/HTML/sub-* &&
-    cp -R /OUTPUTS/BIDS/sub-*/figures /OUTPUTS/HTML/sub-* &&
-    mv /OUTPUTS/BIDS/sourcedata /OUTPUTS/sourcedata
+    cp -R /OUTPUTS/BIDS/sub-* /OUTPUTS/HTML &&
+    rm -fr /OUTPUTS/HTML/sub-*/ses-* &&
+    rm -fr /OUTPUTS/HTML/sub-*/log
     '
