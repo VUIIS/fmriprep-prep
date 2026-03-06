@@ -7,11 +7,11 @@ jobtemplate: job_template_v3.txt
 
 containers:
   - name: fmriprep
-    path: fmriprep_23.2.1.sif
-    source: docker://nipreps/fmriprep:23.2.1
+    path: fmriprep_24.1.1.sif
+    source: docker://nipreps/fmriprep:24.1.1
 
 requirements:
-  walltime: 2-0
+  walltime: 3-0
   memory: 24000
 
 inputs:
@@ -32,16 +32,24 @@ inputs:
           - {resource: JSON, fmatch: '*.json', fdest: t1.json}
 
       - name: scan_fmri
-        types: rest*,BOLD_v1_3mm_TR2000,REST*
+        types: REST1_v2,REST2_v2
         skip_unusable: true
         resources:
           - {resource: NIFTI, fmatch: '*.nii.gz', fdest: fmri.nii.gz}
           - {resource: JSON, fmatch: '*.json', fdest: fmri.json}
 
+      - name: scan_fmrirpe
+        types: ReverseEPI_v2
+        skip_unusable: true
+        keep_multis: first
+        resources:
+          - {resource: NIFTI, fmatch: '*.nii.gz', fdest: fmrirpe.nii.gz}
+          - {resource: JSON, fmatch: '*.json', fdest: fmrirpe.json}
+
     assessors:
         
         - name: assr_fs
-          proctypes: freesurfer_dev_v2
+          proctypes: freesurfer720_v2
           resources:
             - {resource: SUBJECT, ftype: DIR, fdest: SUBJECT}
 
@@ -52,6 +60,7 @@ inputs:
 outputs:
   - {path: HTML, type: DIR, resource: HTML}
   - {path: BIDS, type: DIR, resource: fmriprepBIDS}
+  - {path: fmriprep-prep, type: DIR, resource: SCRIPTS}
 
 pre:
   type: singularity_exec
@@ -61,25 +70,29 @@ pre:
     mkdir /INPUTS/freesurfer &&
     mv /INPUTS/SUBJECT/SUBJECT /INPUTS/freesurfer/sub-{subject} &&
     cd /INPUTS &&
-    curl -o v1.1.0.tar.gz -L https://github.com/baxpr/fmriprep-prep/archive/refs/tags/v1.1.0.tar.gz &&
-    tar -zxf v1.1.0.tar.gz &&
-    export PATH=/INPUTS/fmriprep-prep-1.1.0/src:\$PATH &&
+    curl -o fmriprep-prep.tar.gz -L https://github.com/baxpr/fmriprep-prep/archive/refs/tags/v1.6.1.tar.gz &&
+    tar -zxf fmriprep-prep.tar.gz &&
+    mv fmriprep-prep-* fmriprep-prep &&
+    export PATH=/INPUTS/fmriprep-prep/src:\$PATH &&
     fmriprep-prep.sh
       --t1_niigz /INPUTS/t1.nii.gz
       --bids_dir /INPUTS/BIDS
       --sub {subject}
       --ses {session}
+      --freesurfer_dir /INPUTS/freesurfer/sub-{subject}
       --fmri_niigzs /INPUTS/fmri.nii.gz
+      --rpefwd_niigz /INPUTS/fmri.nii.gz
+      --rperev_niigz /INPUTS/fmrirpe.nii.gz
     '
 
 command:
   type: singularity_run
   container: fmriprep
   args: >-
+    --work-dir /tmp
     --notrack
-    --participant_label {subject}
     --output-spaces anat
-    --ignore fieldmaps slicetiming
+    --ignore slicetiming
     --fs-license-file /opt/license.txt
     --fs-subjects-dir /INPUTS/freesurfer
     /INPUTS/BIDS
@@ -93,7 +106,8 @@ post:
   args: >-
     bash -c '
     mkdir /OUTPUTS/HTML &&
-    cp /OUTPUTS/BIDS/sub-{subject}.html /OUTPUTS/HTML &&
-    mkdir /OUTPUTS/HTML/sub-{subject} &&
-    cp -R /OUTPUTS/BIDS/sub-{subject}/figures /OUTPUTS/HTML/sub-{subject}
+    cp /OUTPUTS/fmriprepBIDS/sub-*.html /OUTPUTS/HTML &&
+    cp -R /OUTPUTS/fmriprepBIDS/sub-* /OUTPUTS/HTML &&
+    rm -fr /OUTPUTS/HTML/sub-*/ses-* &&
+    rm -fr /OUTPUTS/HTML/sub-*/log
     '
