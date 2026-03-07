@@ -67,19 +67,19 @@ pre:
   container: fmriprep
   args: >-
     bash -c '
-    mkdir /INPUTS/freesurfer &&
-    mv /INPUTS/SUBJECT/SUBJECT /INPUTS/freesurfer/sub-{subject} &&
-    cd /INPUTS &&
+    mkdir /OUTPUTS/freesurfer &&
+    mv /INPUTS/SUBJECT/SUBJECT /OUTPUTS/freesurfer/sub-{subject} &&
+    cd /OUTPUTS &&
     curl -o fmriprep-prep.tar.gz -L https://github.com/baxpr/fmriprep-prep/archive/refs/tags/v1.6.1.tar.gz &&
     tar -zxf fmriprep-prep.tar.gz &&
     mv fmriprep-prep-* fmriprep-prep &&
-    export PATH=/INPUTS/fmriprep-prep/src:\$PATH &&
+    export PATH=/OUTPUTS/fmriprep-prep/src:\$PATH &&
     fmriprep-prep.sh
       --t1_niigz /INPUTS/t1.nii.gz
       --bids_dir /INPUTS/BIDS
       --sub {subject}
       --ses {session}
-      --freesurfer_dir /INPUTS/freesurfer/sub-{subject}
+      --freesurfer_dir /OUTPUTS/freesurfer/sub-{subject}
       --fmri_niigzs /INPUTS/fmri.nii.gz
       --rpefwd_niigz /INPUTS/fmri.nii.gz
       --rperev_niigz /INPUTS/fmrirpe.nii.gz
@@ -94,7 +94,7 @@ command:
     --output-spaces anat
     --ignore slicetiming
     --fs-license-file /opt/license.txt
-    --fs-subjects-dir /INPUTS/freesurfer
+    --fs-subjects-dir /OUTPUTS/freesurfer
     /INPUTS/BIDS
     /OUTPUTS/BIDS
     participant
@@ -106,8 +106,8 @@ post:
   args: >-
     bash -c '
     mkdir /OUTPUTS/HTML &&
-    cp /OUTPUTS/fmriprepBIDS/sub-*.html /OUTPUTS/HTML &&
-    cp -R /OUTPUTS/fmriprepBIDS/sub-* /OUTPUTS/HTML &&
+    cp /OUTPUTS/BIDS/sub-*.html /OUTPUTS/HTML &&
+    cp -R /OUTPUTS/BIDS/sub-* /OUTPUTS/HTML &&
     rm -fr /OUTPUTS/HTML/sub-*/ses-* &&
     rm -fr /OUTPUTS/HTML/sub-*/log
     '
