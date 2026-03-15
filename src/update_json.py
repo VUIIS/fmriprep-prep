@@ -133,7 +133,7 @@ if args.slicetiming:
     # slice axis is the third one.
     nii = nibabel.load(args.fmri_niigz)
     nslices = nii.header['dim'][3]
-    tr = nii.header['pixdim'][4]
+    tr = float(nii.header['pixdim'][4])
 
     # Check for existing
     if 'SliceTiming' in jobj:
