@@ -93,31 +93,30 @@ with open(jsonfile) as f:
 
 ## Phase encoding direction/info
 
-# Verify that this is a Philips scan before applying the Philips-
-# specific fixes for TotalReadoutTime and PhaseEncodingDirection
-if not jobj['Manufacturer'].startswith('Philips'):
-    raise Exception(f'Manufacturer is {jobj["Manufacturer"]} - expecting Philips')
+# If this is a Philips scan, apply the Philips-specific fixes for 
+# TotalReadoutTime and PhaseEncodingDirection
+if jobj['Manufacturer'].startswith('Philips'):
 
-# Update readout time
-if not 'TotalReadoutTime' in jobj:
-    if 'EstimatedTotalReadoutTime' in jobj:
-        jobj['TotalReadoutTime'] = jobj['EstimatedTotalReadoutTime']
-    else:
-        # Use 0 for TotalReadoutTime
-        jobj['TotalReadoutTime'] = 0
+    # Update readout time
+    if not 'TotalReadoutTime' in jobj:
+        if 'EstimatedTotalReadoutTime' in jobj:
+            jobj['TotalReadoutTime'] = jobj['EstimatedTotalReadoutTime']
+        else:
+            # Use 0 for TotalReadoutTime
+            jobj['TotalReadoutTime'] = 0
 
-# Check for bogus PE dir with ? and remove if present
-if ('PhaseEncodingDirection' in jobj) and (jobj['PhaseEncodingDirection'].endswith('?')):
-    jobj['PhaseEncodingDirection'] = jobj['PhaseEncodingDirection'][:-1]
+    # Check for bogus PE dir with ? and remove if present
+    if ('PhaseEncodingDirection' in jobj) and (jobj['PhaseEncodingDirection'].endswith('?')):
+        jobj['PhaseEncodingDirection'] = jobj['PhaseEncodingDirection'][:-1]
 
-# Add PE polarity if we have PhaseEncodingAxis
-if 'PhaseEncodingAxis' in jobj:
-    if args.polarity=='+':
-        jobj['PhaseEncodingDirection'] = jobj['PhaseEncodingAxis']
-    elif args.polarity=='-':
-        jobj['PhaseEncodingDirection'] = jobj['PhaseEncodingAxis'] + '-'
-    else:
-        raise Exception(f'Unknown polarity {args.polarity}')
+    # Add PE polarity if we have PhaseEncodingAxis
+    if 'PhaseEncodingAxis' in jobj:
+        if args.polarity=='+':
+            jobj['PhaseEncodingDirection'] = jobj['PhaseEncodingAxis']
+        elif args.polarity=='-':
+            jobj['PhaseEncodingDirection'] = jobj['PhaseEncodingAxis'] + '-'
+        else:
+            raise Exception(f'Unknown polarity {args.polarity}')
 
 if args.intendedfor:
     jobj['IntendedFor'] = args.intendedfor
