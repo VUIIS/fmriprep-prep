@@ -1,0 +1,87 @@
+---
+procyamlversion: 3.0.0-dev.0
+description: fmriprep - https://fmriprep.org/en/stable/
+jobtemplate: job_template_v3.txt
+containers:
+  - name: fmriprep
+    path: fmriprep_24.1.1.sif
+    source: docker://nipreps/fmriprep:24.1.1
+requirements:
+  walltime: 2-0
+  memory: 24000
+inputs:
+  xnat:
+    scans:
+      - name: scan_t1
+        types: cs_2.8_T1W_3D_TFE
+        keep_multis: first
+        skip_unusable: true
+        resources:
+          - {resource: NIFTI, fmatch: '*.nii.gz', fdest: t1.nii.gz}
+          - {resource: JSON, fmatch: '*.json', fdest: t1.json}
+      - name: scan_fmri
+        types: fMRI*
+        resources:
+          - {resource: NIFTI, fmatch: '*.nii.gz', fdest: fmri.nii.gz}
+          - {resource: JSON, fmatch: '*.json', fdest: fmri.json}
+      - name: scan_fmrifwd
+        types: fMRI_SE_TOPUP_APA
+        keep_multis: first
+        resources:
+          - {resource: NIFTI, fmatch: '*.nii.gz', fdest: fmrifwd.nii.gz}
+          - {resource: JSON, fmatch: '*.json', fdest: fmrifwd.json}
+      - name: scan_fmrirpe
+        types: fMRI_SE_TOPUP_APP
+        keep_multis: first
+        resources:
+          - {resource: NIFTI, fmatch: '*.nii.gz', fdest: fmrirev.nii.gz}
+          - {resource: JSON, fmatch: '*.json', fdest: fmrirev.json}
+    attrs:
+      - {varname: subject, object: session, attr: subject_label}
+      - {varname: session, object: session, attr: label}
+outputs:
+  - {path: HTML, type: DIR, resource: HTML}
+  - {path: BIDS, type: DIR, resource: fmriprepBIDS}
+pre:
+  type: singularity_exec
+  container: fmriprep
+  args: >-
+    bash -c '
+    cd /OUTPUTS &&
+    curl -o fmriprep-prep.tar.gz -L https://github.com/baxpr/fmriprep-prep/archive/refs/tags/v1.6.0.tar.gz &&
+    tar -zxf fmriprep-prep.tar.gz &&
+    mv fmriprep-prep-* fmriprep-prep &&
+    export PATH=/OUTPUTS/fmriprep-prep/src:\$PATH &&
+    fmriprep-prep.sh
+      --t1_niigz /INPUTS/t1.nii.gz
+      --fmri_niigzs /INPUTS/fmri.nii.gz
+      --rpefwd_niigz /INPUTS/fmrifwd.nii.gz
+      --rperev_niigz /INPUTS/fmrirev.nii.gz
+      --bids_dir /INPUTS/BIDS
+      --sub {subject}
+      --ses {session}
+      --fmri_niigzs /INPUTS/fmri.nii.gz
+    '
+command:
+  type: singularity_run
+  container: fmriprep
+  args: >-
+    --notrack
+    --participant_label {subject}
+    --output-spaces MNI152NLin6Asym
+    --ignore slicetiming
+    --fs-license-file /opt/license.txt
+    /INPUTS/BIDS
+    /OUTPUTS/BIDS
+    participant
+  extraopts: --bind /data/mcr/centos7/FS6/license.txt:/opt/license.txt
+post:
+  type: singularity_exec
+  container: fmriprep
+  args: >-
+    bash -c '
+    mkdir /OUTPUTS/HTML &&
+    cp /OUTPUTS/BIDS/sub-{subject}.html /OUTPUTS/HTML &&
+    mkdir /OUTPUTS/HTML/sub-{subject} &&
+    cp -R /OUTPUTS/BIDS/sub-{subject}/figures /OUTPUTS/HTML/sub-{subject}
+    '
