@@ -11,9 +11,6 @@ requirements:
   memory: 24000
 inputs:
   xnat:
-    filters:
-      - type: match
-        inputs: scan_fmri,assr_synbold/scan_fmri
     scans:
       - name: scan_t1
         types: cs_2.8_T1W_3D_TFE
@@ -24,11 +21,20 @@ inputs:
           - {resource: JSON, fmatch: '*.json', fdest: t1.json}
       - name: scan_fmri
         types: fMRI*
-    assessors:
-        - name: assr_synbold
-          proctypes: synbold_v1
-          resources:
-            - {resource: BOLD_CORRECTED, fmatch: '*.nii.gz', fdest: fmri.nii.gz}
+        resources:
+          - {resource: NIFTI, fmatch: '*.nii.gz', fdest: fmri.nii.gz}
+          - {resource: JSON, fmatch: '*.json', fdest: fmri.json}
+      - name: scan_fmrifwd
+        types: fMRI_SE_TOPUP_APA
+        resources:
+          - {resource: NIFTI, fmatch: '*.nii.gz', fdest: fmrifwd.nii.gz}
+          - {resource: JSON, fmatch: '*.json', fdest: fmrifwd.json}
+      - name: scan_fmrirpe
+        types: fMRI_SE_TOPUP_APP
+        keep_multis: first
+        resources:
+          - {resource: NIFTI, fmatch: '*.nii.gz', fdest: fmrirpe.nii.gz}
+          - {resource: JSON, fmatch: '*.json', fdest: fmrirpe.json}
     attrs:
       - {varname: subject, object: session, attr: subject_label}
       - {varname: session, object: session, attr: label}
@@ -41,6 +47,9 @@ pre:
   args: >-
     bash -c '
     mkdir /INPUTS/freesurfer &&
+    ls /INPUTS &&
+    echo ********* &&
+    ls /INPUTS/SUBJECT &&
     mv /INPUTS/SUBJECT/SUBJECT /INPUTS/freesurfer/sub-{subject} &&
     cd /INPUTS &&
     curl -o v1.6.0.tar.gz -L https://github.com/baxpr/fmriprep-prep/archive/refs/tags/v1.6.0.tar.gz &&
@@ -48,6 +57,9 @@ pre:
     export PATH=/INPUTS/fmriprep-prep-1.6.0/src:\$PATH &&
     fmriprep-prep.sh
       --t1_niigz /INPUTS/t1.nii.gz
+      --fmri_niigzs /INPUTS/fmri.nii.gz
+      --rpefwd_niigz /INPUTS/fmrifwd.nii.gz
+      --rperev_niigz /INPUTS/fmrirpe.nii.gz
       --bids_dir /INPUTS/BIDS
       --sub {subject}
       --ses {session}
@@ -57,29 +69,22 @@ command:
   type: singularity_run
   container: fmriprep
   args: >-
-    --work-dir /tmp
     --notrack
-    --output-spaces MNI152NLin2009cAsym
-    --ignore fieldmaps slicetiming
+    --participant_label {subject}
+    --output-spaces MNI152NLin6Asym
+    --ignore slicetiming
     --fs-license-file /opt/license.txt
     /INPUTS/BIDS
     /OUTPUTS/BIDS
     participant
   extraopts: --bind /data/mcr/centos7/FS6/license.txt:/opt/license.txt
-# Here we do some extra gymnastics to copy the full HTML output to HTML resource
-# without knowing the dirnames (due to changed subject label). Also, delete the 
-# fsaverage because it just takes up space.
 post:
   type: singularity_exec
   container: fmriprep
   args: >-
     bash -c '
     mkdir /OUTPUTS/HTML &&
-    ls /OUTPUTS/BIDS/sub-*/ses-*/func &&
-    cp /OUTPUTS/BIDS/sub-*.html /OUTPUTS/HTML &&
-    cp -R /OUTPUTS/BIDS/sub-* /OUTPUTS/HTML &&
-    rm -fr /OUTPUTS/HTML/sub-*/ses-* &&
-    rm -fr /OUTPUTS/HTML/sub-*/log &&
-    mv /OUTPUTS/BIDS/sourcedata /OUTPUTS/sourcedata &&
-    rm -fr /OUTPUTS/sourcedata/freesurfer/fsaverage
+    cp /OUTPUTS/BIDS/sub-{subject}.html /OUTPUTS/HTML &&
+    mkdir /OUTPUTS/HTML/sub-{subject} &&
+    cp -R /OUTPUTS/BIDS/sub-{subject}/figures /OUTPUTS/HTML/sub-{subject}
     '
