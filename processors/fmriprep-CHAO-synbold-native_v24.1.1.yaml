@@ -24,9 +24,6 @@ inputs:
           - {resource: JSON, fmatch: '*.json', fdest: t1.json}
       - name: scan_fmri
         types: fMRI*
-        resources:
-          - {resource: JSON, fmatch: '*.json', fdest: fmri.json}
-          - {resource: NIFTI, fmatch: '*.nii.gz', fdest: fmri.nii.gz}
     assessors:
         - name: assr_synbold
           proctypes: synbold_v1
