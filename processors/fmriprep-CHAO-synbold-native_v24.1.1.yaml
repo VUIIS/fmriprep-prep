@@ -39,6 +39,7 @@ inputs:
 outputs:
   - {path: HTML, type: DIR, resource: HTML}
   - {path: BIDS, type: DIR, resource: fmriprepBIDS}
+  - {path: fmriprep-prep, type: DIR, resource: SCRIPTS}
 pre:
   type: singularity_exec
   container: fmriprep
@@ -53,6 +54,7 @@ pre:
       --bids_dir /INPUTS/BIDS
       --sub {subject}
       --ses {session}
+      --t1_niigz /INPUTS/t1.nii.gz
       --fmri_niigzs /INPUTS/fmri.nii.gz
     '
 command:
