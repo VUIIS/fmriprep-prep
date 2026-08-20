@@ -13,8 +13,17 @@ inputs:
   xnat:
     filters:
       - type: match
+        inputs: scan_t1,assr_synbold/scan_t1
+      - type: match
         inputs: scan_fmri,assr_synbold/scan_fmri
     scans:
+      - name: scan_t1
+        types: cs_2.8_T1W_3D_TFE
+        keep_multis: first
+        skip_unusable: true
+        resources:
+          - {resource: NIFTI, fmatch: '*.nii.gz', fdest: t1.nii.gz}
+          - {resource: JSON, fmatch: '*.json', fdest: t1.json}
       - name: scan_fmri
         types: fMRI*
     assessors:
