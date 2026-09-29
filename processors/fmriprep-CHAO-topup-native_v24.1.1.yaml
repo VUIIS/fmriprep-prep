@@ -20,16 +20,22 @@ inputs:
           - {resource: NIFTI, fmatch: '*.nii.gz', fdest: t1.nii.gz}
           - {resource: JSON, fmatch: '*.json', fdest: t1.json}
       - name: scan_fmri
-        types: fMRI_SE_TOPUP_APA
+        types: fMRI*
         resources:
           - {resource: NIFTI, fmatch: '*.nii.gz', fdest: fmri.nii.gz}
           - {resource: JSON, fmatch: '*.json', fdest: fmri.json}
+      - name: scan_fmrifwd
+        types: fMRI_SE_TOPUP_APA
+        keep_multis: first
+        resources:
+          - {resource: NIFTI, fmatch: '*.nii.gz', fdest: fmrifwd.nii.gz}
+          - {resource: JSON, fmatch: '*.json', fdest: fmrifwd.json}
       - name: scan_fmrirpe
         types: fMRI_SE_TOPUP_APP
         keep_multis: first
         resources:
-          - {resource: NIFTI, fmatch: '*.nii.gz', fdest: fmrirpe.nii.gz}
-          - {resource: JSON, fmatch: '*.json', fdest: fmrirpe.json}
+          - {resource: NIFTI, fmatch: '*.nii.gz', fdest: fmrirev.nii.gz}
+          - {resource: JSON, fmatch: '*.json', fdest: fmrirev.json}
     attrs:
       - {varname: subject, object: session, attr: subject_label}
       - {varname: session, object: session, attr: label}
@@ -41,19 +47,16 @@ pre:
   container: fmriprep
   args: >-
     bash -c '
-    mkdir /INPUTS/freesurfer &&
-    ls /INPUTS &&
-    echo ********* &&
-    ls /INPUTS/SUBJECT &&
-    mv /INPUTS/SUBJECT/SUBJECT /INPUTS/freesurfer/sub-{subject} &&
-    cd /INPUTS &&
-    curl -o v1.5.0.tar.gz -L https://github.com/baxpr/fmriprep-prep/archive/refs/tags/v1.5.0.tar.gz &&
-    tar -zxf v1.5.0.tar.gz &&
-    export PATH=/INPUTS/fmriprep-prep-1.5.0/src:\$PATH &&
+    cd /OUTPUTS &&
+    curl -o fmriprep-prep.tar.gz -L https://github.com/baxpr/fmriprep-prep/archive/refs/tags/v1.6.0.tar.gz &&
+    tar -zxf fmriprep-prep.tar.gz &&
+    mv fmriprep-prep-* fmriprep-prep &&
+    export PATH=/OUTPUTS/fmriprep-prep/src:\$PATH &&
     fmriprep-prep.sh
       --t1_niigz /INPUTS/t1.nii.gz
-      --rpefwd_niigz /INPUTS/fmri.nii.gz
-      --rperev_niigz /INPUTS/fmrirpe.nii.gz
+      --fmri_niigzs /INPUTS/fmri.nii.gz
+      --rpefwd_niigz /INPUTS/fmrifwd.nii.gz
+      --rperev_niigz /INPUTS/fmrirev.nii.gz
       --bids_dir /INPUTS/BIDS
       --sub {subject}
       --ses {session}
