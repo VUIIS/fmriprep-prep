@@ -183,6 +183,14 @@ if args.slicetiming:
         jobj['SliceTiming'][0::2] = basetimes[0:math.ceil(nslices/2)]
         jobj['SliceTiming'][1::2] = basetimes[math.ceil(nslices/2):]
         
+    elif args.slicetiming in ['Philips_INTERLEAVED_k']:
+        basetimes = [x / nslices * tr for x in range(0, nslices)]
+        slicestep = round(math.sqrt(nslices))
+        idx = []
+        for startslice in range(0,slicestep):
+            idx.extend([x for x in range(startslice, nslices, slicestep)])
+        jobj['SliceTiming'] = [basetimes[x] for x in idx]
+          
     elif args.slicetiming in ['none']:
         pass
 
